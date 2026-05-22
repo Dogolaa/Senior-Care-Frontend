@@ -1,5 +1,5 @@
 import { Heart, Thermometer, Activity, Wind, Scale } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, heartRateStatus, saturationStatus, temperatureStatus, bloodPressureStatus } from '@/lib/utils'
 import type { HealthRecordDTO } from '@/types/api'
 
 interface VitalConfig {
@@ -8,24 +8,6 @@ interface VitalConfig {
   unit: string
   icon: React.ElementType
   status: 'normal' | 'warning' | 'danger'
-}
-
-function getHeartRateStatus(hr: number): 'normal' | 'warning' | 'danger' {
-  if (hr >= 60 && hr <= 100) return 'normal'
-  if (hr >= 50 && hr <= 120) return 'warning'
-  return 'danger'
-}
-
-function getTempStatus(t: number): 'normal' | 'warning' | 'danger' {
-  if (t >= 36.0 && t <= 37.5) return 'normal'
-  if (t >= 35.0 && t <= 38.5) return 'warning'
-  return 'danger'
-}
-
-function getSatStatus(s: number): 'normal' | 'warning' | 'danger' {
-  if (s >= 95) return 'normal'
-  if (s >= 90) return 'warning'
-  return 'danger'
 }
 
 function getImcStatus(imc: number): 'normal' | 'warning' | 'danger' {
@@ -67,10 +49,10 @@ interface VitalsDisplayProps {
 
 export function VitalsDisplay({ record }: VitalsDisplayProps) {
   const vitals: VitalConfig[] = [
-    { label: 'Freq. Cardíaca', value: record.heartRate, unit: 'bpm', icon: Heart, status: getHeartRateStatus(record.heartRate) },
-    { label: 'Temperatura', value: record.temperature.toFixed(1), unit: '°C', icon: Thermometer, status: getTempStatus(record.temperature) },
-    { label: 'Saturação', value: record.saturation.toFixed(0), unit: '%', icon: Wind, status: getSatStatus(record.saturation) },
-    { label: 'Pressão Arterial', value: record.bloodPressure, unit: 'mmHg', icon: Activity, status: 'normal' },
+    { label: 'Freq. Cardíaca', value: record.heartRate, unit: 'bpm', icon: Heart, status: heartRateStatus(record.heartRate) },
+    { label: 'Temperatura', value: record.temperature.toFixed(1), unit: '°C', icon: Thermometer, status: temperatureStatus(record.temperature) },
+    { label: 'Saturação', value: record.saturation.toFixed(0), unit: '%', icon: Wind, status: saturationStatus(record.saturation) },
+    { label: 'Pressão Arterial', value: record.bloodPressure, unit: 'mmHg', icon: Activity, status: bloodPressureStatus(record.bloodPressure) },
     { label: 'IMC', value: record.imc.toFixed(1), unit: 'kg/m²', icon: Scale, status: getImcStatus(record.imc) },
   ]
 

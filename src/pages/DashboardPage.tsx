@@ -1,4 +1,5 @@
-import { Heart, Users, UserCheck, Pill, FileHeart, Activity, Stethoscope } from 'lucide-react'
+import { Heart, Users, UserCheck, Pill, FileHeart, Activity, Stethoscope, BedDouble, ClipboardList } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CardSkeleton } from '@/components/shared/LoadingSkeleton'
 import { PageHeader } from '@/components/shared/PageHeader'
@@ -7,46 +8,153 @@ import { Avatar } from '@/components/ui/avatar'
 import { useAuthStore } from '@/store/authStore'
 import { ROLE_LABELS, ROLE_AVATAR_COLORS, SHIFT_LABELS } from '@/lib/constants'
 import { useEmployees } from '@/features/employees/hooks/useEmployees'
+import { useDashboardStats } from '@/features/dashboard/hooks/useDashboardStats'
 import { hasPermission } from '@/lib/permissions'
-import { formatDate } from '@/lib/utils'
+import { formatDate, formatDateTime } from '@/lib/utils'
+import type { RecentHealthUpdateDTO, RecentActivityDTO } from '@/types/api'
+
+// ─── Componentes compartilhados ───────────────────────────────────────────────
+
+function StatCard({ label, value, icon: Icon, color, bg, loading }: {
+  label: string
+  value: number | string
+  icon: React.ElementType
+  color: string
+  bg: string
+  loading?: boolean
+}) {
+  if (loading) return <CardSkeleton />
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
+        <div className={`${bg} p-2 rounded-lg`}>
+          <Icon className={`h-4 w-4 ${color}`} />
+        </div>
+      </CardHeader>
+      <CardContent>
+        <p className="text-3xl font-bold">{value}</p>
+      </CardContent>
+    </Card>
+  )
+}
+
+function RecentHealthUpdatesList({ items, loading }: { items: RecentHealthUpdateDTO[]; loading: boolean }) {
+  return (
+    <div>
+      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+        Últimas Atualizações de Prontuário
+      </h3>
+      {loading ? (
+        <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)}</div>
+      ) : items.length === 0 ? (
+        <p className="text-sm text-muted-foreground py-2">Nenhuma atualização recente.</p>
+      ) : (
+        <div className="space-y-2">
+          {items.map((item) => (
+            <Link key={item.residentId} to="/health-records">
+              <Card className="hover:shadow-sm transition-shadow cursor-pointer">
+                <CardContent className="py-3 px-4 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="bg-blue-50 p-1.5 rounded-md shrink-0">
+                      <FileHeart className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm truncate">{item.residentName}</p>
+                      <p className="text-xs text-muted-foreground">Quarto {item.room}</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground shrink-0">{formatDate(item.lastUpdated)}</p>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function RecentActivitiesList({ items, loading }: { items: RecentActivityDTO[]; loading: boolean }) {
+  return (
+    <div>
+      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+        Atividades Recentes
+      </h3>
+      {loading ? (
+        <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)}</div>
+      ) : items.length === 0 ? (
+        <p className="text-sm text-muted-foreground py-2">Nenhuma atividade recente.</p>
+      ) : (
+        <div className="space-y-2">
+          {items.map((item, idx) => (
+            <Link key={`${item.residentId}-${idx}`} to="/activities">
+              <Card className="hover:shadow-sm transition-shadow cursor-pointer">
+                <CardContent className="py-3 px-4 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="bg-emerald-50 p-1.5 rounded-md shrink-0">
+                      <Activity className="h-4 w-4 text-emerald-600" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm truncate">{item.residentName}</p>
+                      <p className="text-xs text-muted-foreground truncate">{item.activityName} · Quarto {item.room}</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground shrink-0">{formatDateTime(item.conductedAt)}</p>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Dashboard Admin / Gerente ─────────────────────────────────────────────────
 
 function AdminManagerDashboard() {
-  const { data: employees, isLoading } = useEmployees()
+  const { data: stats, isLoading: statsLoading } = useDashboardStats()
+  const { data: employees, isLoading: empLoading } = useEmployees()
 
   const nurses = employees?.filter((e) => e.role === 'NURSE') ?? []
   const doctors = employees?.filter((e) => e.role === 'DOCTOR') ?? []
-  const managers = employees?.filter((e) => e.role === 'MANAGER') ?? []
 
-  const stats = [
-    { label: 'Total de Funcionários', value: employees?.length ?? '—', icon: UserCheck, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Enfermeiros', value: nurses.length || '—', icon: Heart, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-    { label: 'Médicos', value: doctors.length || '—', icon: Users, color: 'text-violet-600', bg: 'bg-violet-50' },
-    { label: 'Gerentes', value: managers.length || '—', icon: Pill, color: 'text-amber-600', bg: 'bg-amber-50' },
+  const statCards = [
+    { label: 'Residentes Ativos', value: stats?.totalActiveResidents ?? '—', icon: BedDouble, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Funcionários', value: stats?.totalEmployees ?? '—', icon: UserCheck, color: 'text-violet-600', bg: 'bg-violet-50' },
+    { label: 'Medicamentos Hoje', value: stats?.medicationsAdministeredToday ?? '—', icon: Pill, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { label: 'Atividades Hoje', value: stats?.activitiesLoggedToday ?? '—', icon: ClipboardList, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   ]
 
   return (
     <>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-        {isLoading
-          ? Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)
-          : stats.map((s) => (
-              <Card key={s.label}>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">{s.label}</CardTitle>
-                  <div className={`${s.bg} p-2 rounded-lg`}>
-                    <s.icon className={`h-4 w-4 ${s.color}`} />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-3xl font-bold">{s.value}</p>
-                </CardContent>
-              </Card>
-            ))}
+        {statCards.map((s) => (
+          <StatCard key={s.label} {...s} loading={statsLoading} />
+        ))}
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2 mb-8">
+        <RecentHealthUpdatesList
+          items={stats?.recentHealthUpdates ?? []}
+          loading={statsLoading}
+        />
+        <RecentActivitiesList
+          items={stats?.recentActivities ?? []}
+          loading={statsLoading}
+        />
       </div>
 
       <div>
-        <h2 className="text-lg font-semibold mb-4">Equipe Ativa</h2>
-        {isLoading ? (
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+          Equipe Ativa
+        </h2>
+        <div className="mb-2 flex gap-4 text-sm text-muted-foreground">
+          <span>{nurses.length} enfermeiro(s)</span>
+          <span>{doctors.length} médico(s)</span>
+        </div>
+        {empLoading ? (
           <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)}</div>
         ) : (
           <div className="space-y-2">
@@ -79,66 +187,64 @@ function AdminManagerDashboard() {
   )
 }
 
+// ─── Dashboard Clínico (Médico / Enfermeiro) ───────────────────────────────────
+
 function ClinicalDashboard({ role }: { role: string }) {
+  const { data: stats, isLoading } = useDashboardStats()
+
+  const statCards = [
+    { label: 'Medicamentos Hoje', value: stats?.medicationsAdministeredToday ?? '—', icon: Pill, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { label: 'Atividades Hoje', value: stats?.activitiesLoggedToday ?? '—', icon: ClipboardList, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+  ]
+
   const shortcuts = [
-    {
-      to: '/health-records',
-      icon: FileHeart,
-      label: 'Prontuários',
-      description: 'Consulte e atualize registros de saúde',
-      color: 'text-blue-600',
-      bg: 'bg-blue-50',
-    },
-    {
-      to: '/activities',
-      icon: Activity,
-      label: 'Atividades',
-      description: 'Registre atividades dos residentes',
-      color: 'text-emerald-600',
-      bg: 'bg-emerald-50',
-    },
-    ...(role === 'DOCTOR'
-      ? [{
-          to: '/medications',
-          icon: Pill,
-          label: 'Medicamentos',
-          description: 'Pesquise medicamentos e prescreva',
-          color: 'text-violet-600',
-          bg: 'bg-violet-50',
-        }]
-      : [{
-          to: '/medications',
-          icon: Stethoscope,
-          label: 'Medicamentos',
-          description: 'Consulte medicamentos disponíveis',
-          color: 'text-violet-600',
-          bg: 'bg-violet-50',
-        }]),
+    { to: '/health-records', icon: FileHeart, label: 'Prontuários', description: 'Consulte e atualize registros de saúde', color: 'text-blue-600', bg: 'bg-blue-50' },
+    { to: '/activities', icon: Activity, label: 'Atividades', description: 'Registre atividades dos residentes', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    role === 'DOCTOR'
+      ? { to: '/medications', icon: Pill, label: 'Medicamentos', description: 'Pesquise medicamentos e prescreva', color: 'text-violet-600', bg: 'bg-violet-50' }
+      : { to: '/medications', icon: Stethoscope, label: 'Medicamentos', description: 'Consulte medicamentos disponíveis', color: 'text-violet-600', bg: 'bg-violet-50' },
   ]
 
   return (
-    <div>
-      <h2 className="text-lg font-semibold mb-4">Acesso rápido</h2>
-      <div className="grid gap-4 sm:grid-cols-3">
-        {shortcuts.map((s) => (
-          <a key={s.to} href={s.to}>
-            <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
-              <CardContent className="p-5 flex flex-col gap-3">
-                <div className={`${s.bg} w-10 h-10 rounded-lg flex items-center justify-center`}>
-                  <s.icon className={`h-5 w-5 ${s.color}`} />
-                </div>
-                <div>
-                  <p className="font-semibold">{s.label}</p>
-                  <p className="text-sm text-muted-foreground mt-0.5">{s.description}</p>
-                </div>
-              </CardContent>
-            </Card>
-          </a>
+    <div className="space-y-8">
+      <div className="grid gap-4 sm:grid-cols-2">
+        {statCards.map((s) => (
+          <StatCard key={s.label} {...s} loading={isLoading} />
         ))}
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <RecentHealthUpdatesList items={stats?.recentHealthUpdates ?? []} loading={isLoading} />
+        <RecentActivitiesList items={stats?.recentActivities ?? []} loading={isLoading} />
+      </div>
+
+      <div>
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+          Acesso Rápido
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-3">
+          {shortcuts.map((s) => (
+            <Link key={s.to} to={s.to}>
+              <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
+                <CardContent className="p-5 flex flex-col gap-3">
+                  <div className={`${s.bg} w-10 h-10 rounded-lg flex items-center justify-center`}>
+                    <s.icon className={`h-5 w-5 ${s.color}`} />
+                  </div>
+                  <div>
+                    <p className="font-semibold">{s.label}</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">{s.description}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
       </div>
     </div>
   )
 }
+
+// ─── Dashboard Familiar ────────────────────────────────────────────────────────
 
 function FamilyDashboard() {
   return (
@@ -160,7 +266,7 @@ function FamilyDashboard() {
       </Card>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <a href="/health-records">
+        <Link to="/health-records">
           <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
             <CardContent className="p-5 flex flex-col gap-3">
               <div className="bg-emerald-50 w-10 h-10 rounded-lg flex items-center justify-center">
@@ -168,14 +274,12 @@ function FamilyDashboard() {
               </div>
               <div>
                 <p className="font-semibold">Prontuário</p>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  Veja os sinais vitais e histórico de saúde
-                </p>
+                <p className="text-sm text-muted-foreground mt-0.5">Veja os sinais vitais e histórico de saúde</p>
               </div>
             </CardContent>
           </Card>
-        </a>
-        <a href="/activities">
+        </Link>
+        <Link to="/activities">
           <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
             <CardContent className="p-5 flex flex-col gap-3">
               <div className="bg-amber-50 w-10 h-10 rounded-lg flex items-center justify-center">
@@ -183,17 +287,17 @@ function FamilyDashboard() {
               </div>
               <div>
                 <p className="font-semibold">Atividades</p>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  Acompanhe as atividades realizadas
-                </p>
+                <p className="text-sm text-muted-foreground mt-0.5">Acompanhe as atividades realizadas</p>
               </div>
             </CardContent>
           </Card>
-        </a>
+        </Link>
       </div>
     </div>
   )
 }
+
+// ─── Página Principal ──────────────────────────────────────────────────────────
 
 export function DashboardPage() {
   const { name, role } = useAuthStore()

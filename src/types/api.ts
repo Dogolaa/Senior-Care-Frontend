@@ -181,7 +181,7 @@ export interface HealthRecordHistoryDTO {
   heartRate: number
   temperature: number
   saturation: number
-  imc: number
+  imc: number | null
   updateDate: string
   source: string
   photoUrls: string[]
@@ -274,4 +274,110 @@ export interface PaginationParams {
   page?: number
   size?: number
   sort?: string
+}
+
+export interface RecentHealthUpdateDTO {
+  residentId: string
+  residentName: string
+  room: string
+  lastUpdated: string
+}
+
+export interface RecentActivityDTO {
+  residentId: string
+  residentName: string
+  room: string
+  activityName: string
+  conductedAt: string
+}
+
+export interface DashboardStatsDTO {
+  totalActiveResidents: number
+  totalEmployees: number
+  medicationsAdministeredToday: number
+  activitiesLoggedToday: number
+  recentHealthUpdates: RecentHealthUpdateDTO[]
+  recentActivities: RecentActivityDTO[]
+}
+
+export type CarePlanStatus = 'ACTIVE' | 'COMPLETED' | 'CANCELLED'
+
+export interface CarePlanDTO {
+  id: string
+  residentId: string
+  responsibleId: string
+  title: string
+  description: string | null
+  goals: string[]
+  interventions: string[]
+  startDate: string
+  endDate: string | null
+  status: CarePlanStatus
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateCarePlanRequest {
+  residentId: string
+  responsibleId: string
+  title: string
+  description?: string | null
+  goals?: string[]
+  interventions?: string[]
+  startDate: string
+  endDate?: string | null
+}
+
+export interface UpdateCarePlanRequest {
+  title: string
+  description?: string | null
+  goals?: string[]
+  interventions?: string[]
+  startDate: string
+  endDate?: string | null
+  status: CarePlanStatus
+}
+
+export type IncidentType =
+  | 'FALL'
+  | 'AGITATION'
+  | 'MEDICATION_REFUSAL'
+  | 'BEHAVIORAL_CHANGE'
+  | 'ACCIDENT'
+  | 'OTHER'
+
+export type IncidentSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
+
+export interface IncidentDTO {
+  id: string
+  residentId: string
+  reportedById: string
+  incidentType: IncidentType
+  severity: IncidentSeverity
+  description: string
+  actionTaken: string | null
+  occurredAt: string
+  room: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateIncidentRequest {
+  residentId: string
+  reportedById: string
+  incidentType: IncidentType
+  severity: IncidentSeverity
+  description: string
+  actionTaken?: string | null
+  occurredAt: string
+  room?: string | null
+}
+
+export interface UpdateIncidentRequest {
+  incidentType: IncidentType
+  severity: IncidentSeverity
+  description: string
+  actionTaken?: string | null
+  occurredAt: string
+  room?: string | null
 }

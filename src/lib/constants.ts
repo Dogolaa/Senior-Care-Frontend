@@ -76,3 +76,43 @@ export const SHIFT_OPTIONS = [
 export const VITAL_SOURCE_OPTIONS = Object.entries(VITAL_SOURCE_LABELS).map(([value, label]) => ({ value, label }))
 
 export const API_BASE_URL = '/api/v1'
+
+export const INCIDENT_TYPE_LABELS: Record<string, string> = {
+  FALL: 'Queda',
+  AGITATION: 'Agitação',
+  MEDICATION_REFUSAL: 'Recusa de Medicamento',
+  BEHAVIORAL_CHANGE: 'Mudança Comportamental',
+  ACCIDENT: 'Acidente',
+  OTHER: 'Outro',
+}
+
+export const INCIDENT_SEVERITY_LABELS: Record<string, string> = {
+  LOW: 'Baixa',
+  MEDIUM: 'Média',
+  HIGH: 'Alta',
+  CRITICAL: 'Crítica',
+}
+
+export const INCIDENT_SEVERITY_COLORS: Record<string, string> = {
+  LOW: 'bg-green-100 text-green-800',
+  MEDIUM: 'bg-amber-100 text-amber-800',
+  HIGH: 'bg-orange-100 text-orange-800',
+  CRITICAL: 'bg-red-100 text-red-800',
+}
+
+export const INCIDENT_TYPE_OPTIONS = Object.entries(INCIDENT_TYPE_LABELS).map(([value, label]) => ({ value, label }))
+export const INCIDENT_SEVERITY_OPTIONS = Object.entries(INCIDENT_SEVERITY_LABELS).map(([value, label]) => ({ value, label }))
+
+export const CARE_PLAN_STATUS_LABELS: Record<string, string> = {
+  ACTIVE: 'Ativo',
+  COMPLETED: 'Concluído',
+  CANCELLED: 'Cancelado',
+}
+
+export const CARE_PLAN_STATUS_COLORS: Record<string, string> = {
+  ACTIVE: 'bg-green-100 text-green-800',
+  COMPLETED: 'bg-blue-100 text-blue-800',
+  CANCELLED: 'bg-slate-100 text-slate-500',
+}
+
+export const CARE_PLAN_STATUS_OPTIONS = Object.entries(CARE_PLAN_STATUS_LABELS).map(([value, label]) => ({ value, label }))

@@ -10,6 +10,10 @@ import { MedicationsPage } from '@/pages/MedicationsPage'
 import { ActivitiesPage } from '@/pages/ActivitiesPage'
 import { UsersPage } from '@/pages/UsersPage'
 import { FamilyMembersPage } from '@/pages/FamilyMembersPage'
+import { BedsPage } from '@/pages/BedsPage'
+import { IncidentsPage } from '@/pages/IncidentsPage'
+import { ReportsPage } from '@/pages/ReportsPage'
+import { CarePlansPage } from '@/pages/CarePlansPage'
 import { ChangePasswordPage } from '@/pages/ChangePasswordPage'
 
 export const router = createBrowserRouter([
@@ -28,10 +32,14 @@ export const router = createBrowserRouter([
           { index: true, element: <Navigate to="/dashboard" replace /> },
           { path: 'dashboard', element: <DashboardPage /> },
           { path: 'residents', element: <ResidentsPage /> },
+          { path: 'beds', element: <BedsPage /> },
           { path: 'employees', element: <EmployeesPage /> },
           { path: 'health-records', element: <HealthRecordsPage /> },
           { path: 'medications', element: <MedicationsPage /> },
           { path: 'activities', element: <ActivitiesPage /> },
+          { path: 'incidents', element: <IncidentsPage /> },
+          { path: 'care-plans', element: <CarePlansPage /> },
+          { path: 'reports', element: <ReportsPage /> },
           { path: 'users', element: <UsersPage /> },
           { path: 'family-members', element: <FamilyMembersPage /> },
         ],

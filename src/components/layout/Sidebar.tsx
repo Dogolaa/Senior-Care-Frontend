@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, UserCheck, FileHeart,
-  Pill, Activity, LogOut, Heart, Users, UserCog,
+  Pill, Activity, LogOut, Heart, Users, UserCog, BedDouble, AlertTriangle, FileText, ClipboardList,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
@@ -22,6 +22,12 @@ const navItems: { to: string; icon: React.ElementType; label: string; permission
     to: '/residents',
     icon: Heart,
     label: 'Residentes',
+    permissions: ['MANAGE_RESIDENTS', 'VIEW_RESIDENTS'],
+  },
+  {
+    to: '/beds',
+    icon: BedDouble,
+    label: 'Leitos',
     permissions: ['MANAGE_RESIDENTS', 'VIEW_RESIDENTS'],
   },
   {
@@ -47,6 +53,24 @@ const navItems: { to: string; icon: React.ElementType; label: string; permission
     icon: Activity,
     label: 'Atividades',
     permissions: ['MANAGE_ACTIVITIES', 'VIEW_RESIDENT_RECORDS'],
+  },
+  {
+    to: '/incidents',
+    icon: AlertTriangle,
+    label: 'Incidentes',
+    permissions: ['MANAGE_INCIDENTS', 'VIEW_INCIDENTS'],
+  },
+  {
+    to: '/care-plans',
+    icon: ClipboardList,
+    label: 'Plano de Cuidados',
+    permissions: ['MANAGE_CARE_PLANS', 'VIEW_CARE_PLANS'],
+  },
+  {
+    to: '/reports',
+    icon: FileText,
+    label: 'Relatórios',
+    permissions: ['MANAGE_HEALTH_RECORDS', 'VIEW_RESIDENT_RECORDS', 'VIEW_REPORTS'],
   },
   {
     to: '/family-members',
