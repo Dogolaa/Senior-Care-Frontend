@@ -6,7 +6,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuthStore } from '@/store/authStore'
 import { useCreateHealthRecord, useUpdateHealthRecord } from '../hooks/useHealthRecord'
+import { VoiceVitalsButton } from './VoiceVitalsButton'
 import type { HealthRecordDTO } from '@/types/api'
+import type { VitalsTranscriptionResponse } from '@/api/speech'
 
 const schema = z.object({
   height: z.coerce.number().min(0.5).max(2.5),
@@ -31,7 +33,7 @@ export function HealthRecordForm({ residentId, existing, onSuccess }: HealthReco
   const { mutate: update, isPending: updating } = useUpdateHealthRecord(residentId)
   const isPending = creating || updating
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: existing
       ? {
@@ -44,6 +46,15 @@ export function HealthRecordForm({ residentId, existing, onSuccess }: HealthReco
         }
       : undefined,
   })
+
+  const handleVoiceFill = (fields: Partial<Omit<VitalsTranscriptionResponse, 'rawTranscription'>>) => {
+    if (fields.bloodPressure != null) setValue('bloodPressure', fields.bloodPressure)
+    if (fields.temperature != null) setValue('temperature', fields.temperature)
+    if (fields.saturation != null) setValue('saturation', fields.saturation)
+    if (fields.heartRate != null) setValue('heartRate', fields.heartRate)
+    if (fields.weight != null) setValue('weight', fields.weight)
+    if (fields.height != null) setValue('height', fields.height)
+  }
 
   const onSubmit = (data: FormData) => {
     if (existing) {
@@ -64,6 +75,7 @@ export function HealthRecordForm({ residentId, existing, onSuccess }: HealthReco
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <VoiceVitalsButton onFill={handleVoiceFill} />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {fields.map((f) => (
           <div key={f.id} className="space-y-2">
