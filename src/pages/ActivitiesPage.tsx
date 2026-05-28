@@ -114,7 +114,7 @@ function ActivityView({ residentId, readOnly }: { residentId: string; readOnly: 
                 <Textarea placeholder="Descreva a atividade realizada..." {...register('description')} />
                 {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Início</Label>
                   <Input type="datetime-local" {...register('startDateTime')} />

@@ -58,7 +58,7 @@ function CarePlanCard({
               <p className="text-sm text-slate-600 leading-relaxed">{plan.description}</p>
             )}
 
-            <div className="grid grid-cols-2 gap-x-4 text-xs text-slate-500">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5 text-xs text-slate-500">
               <span>
                 Início:{' '}
                 {format(new Date(plan.startDate + 'T00:00:00'), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}

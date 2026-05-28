@@ -146,7 +146,7 @@ export function VitalsTab({ residentId, readOnly }: { residentId: string; readOn
                       </div>
                       <span className="text-xs text-muted-foreground">{VITAL_SOURCE_LABELS[h.source] ?? h.source}</span>
                     </div>
-                    <div className="grid grid-cols-3 gap-2 text-muted-foreground">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-muted-foreground">
                       <span>FC: <strong className={cn('text-foreground', heartRateStatus(h.heartRate) === 'danger' && 'text-red-600', heartRateStatus(h.heartRate) === 'warning' && 'text-amber-600')}>{h.heartRate} bpm</strong></span>
                       <span>Temp: <strong className={cn('text-foreground', temperatureStatus(h.temperature) === 'danger' && 'text-red-600', temperatureStatus(h.temperature) === 'warning' && 'text-amber-600')}>{h.temperature}°C</strong></span>
                       <span>Sat: <strong className={cn('text-foreground', saturationStatus(h.saturation) === 'danger' && 'text-red-600', saturationStatus(h.saturation) === 'warning' && 'text-amber-600')}>{h.saturation}%</strong></span>

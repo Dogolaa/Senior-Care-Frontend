@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, UserCheck, FileHeart,
-  Pill, Activity, LogOut, Heart, Users, UserCog, BedDouble, AlertTriangle, FileText, ClipboardList,
+  Pill, Activity, LogOut, Heart, Users, UserCog, BedDouble, AlertTriangle, FileText, ClipboardList, X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
@@ -10,6 +10,11 @@ import { ROLE_LABELS } from '@/lib/constants'
 import { AvatarUploader } from '@/components/shared/PhotoUploader'
 import { updateUserPhoto } from '@/api/users'
 import type { Permission } from '@/lib/permissions'
+
+interface SidebarProps {
+  isOpen?: boolean
+  onClose?: () => void
+}
 
 const navItems: { to: string; icon: React.ElementType; label: string; permissions: Permission[] }[] = [
   {
@@ -86,7 +91,7 @@ const navItems: { to: string; icon: React.ElementType; label: string; permission
   },
 ]
 
-export function Sidebar() {
+export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const { name, role, userId, photoUrl, setPhotoUrl, clearAuth } = useAuthStore()
 
   const visibleItems = navItems.filter(
@@ -94,12 +99,24 @@ export function Sidebar() {
   )
 
   return (
-    <aside className="flex h-screen w-64 flex-col bg-sidebar text-sidebar-foreground">
+    <aside className={cn(
+      'flex h-screen w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground',
+      'fixed inset-y-0 left-0 z-50 transition-transform duration-300 ease-in-out',
+      isOpen ? 'translate-x-0' : '-translate-x-full',
+      'md:relative md:inset-auto md:z-auto md:translate-x-0',
+    )}>
       <div className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border">
         <div className="flex h-9 w-9 items-center justify-center rounded-md bg-sidebar-primary">
           <Heart className="h-5 w-5 text-sidebar-primary-foreground" />
         </div>
         <span className="text-lg font-bold">SeniorCare</span>
+        <button
+          onClick={onClose}
+          className="ml-auto flex h-8 w-8 items-center justify-center rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent transition-colors md:hidden"
+          aria-label="Fechar menu"
+        >
+          <X className="h-5 w-5" />
+        </button>
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
@@ -107,6 +124,7 @@ export function Sidebar() {
           <NavLink
             key={item.to}
             to={item.to}
+            onClick={onClose}
             className={({ isActive }) =>
               cn(
                 'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',

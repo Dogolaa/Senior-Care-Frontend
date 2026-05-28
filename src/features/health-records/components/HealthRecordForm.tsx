@@ -64,7 +64,7 @@ export function HealthRecordForm({ residentId, existing, onSuccess }: HealthReco
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {fields.map((f) => (
           <div key={f.id} className="space-y-2">
             <Label htmlFor={f.id}>{f.label}</Label>
