@@ -49,9 +49,6 @@ export function VoiceVitalsButton({ onFill }: VoiceVitalsButtonProps) {
         type: 'audio',
         mimeType: 'audio/wav',
         recorderType: RecordRTC.StereoAudioRecorder,
-        sampleRate: 16000,
-        desiredSampRate: 16000,
-        numberOfAudioChannels: 1,
       })
 
       recorder.startRecording()
