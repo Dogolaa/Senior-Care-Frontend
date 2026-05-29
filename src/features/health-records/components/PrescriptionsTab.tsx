@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { DatePicker } from '@/components/ui/date-picker'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { MedicationSearchCombobox } from '@/features/medications/components/MedicationSearchCombobox'
 import { usePrescriptions, useCreatePrescription } from '@/features/medications/hooks/useMedications'
@@ -37,8 +38,13 @@ export function PrescriptionsTab({
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<PrescriptionFormData>({ resolver: zodResolver(prescriptionSchema) })
+
+  const startDate = watch('startDate')
+  const endDate = watch('endDate')
 
   const onSubmit = (data: PrescriptionFormData) => {
     if (!selectedMed) return
@@ -102,12 +108,24 @@ export function PrescriptionsTab({
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Início</Label>
-                  <Input type="date" {...register('startDate')} />
+                  <DatePicker
+                    value={startDate}
+                    onChange={(v) => setValue('startDate', v, { shouldValidate: true })}
+                    placeholder="Selecionar"
+                    fromYear={new Date().getFullYear() - 1}
+                    toYear={new Date().getFullYear() + 2}
+                  />
                   {errors.startDate && <p className="text-sm text-destructive">{errors.startDate.message}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label>Término</Label>
-                  <Input type="date" {...register('endDate')} />
+                  <DatePicker
+                    value={endDate}
+                    onChange={(v) => setValue('endDate', v, { shouldValidate: true })}
+                    placeholder="Selecionar"
+                    fromYear={new Date().getFullYear() - 1}
+                    toYear={new Date().getFullYear() + 2}
+                  />
                   {errors.endDate && <p className="text-sm text-destructive">{errors.endDate.message}</p>}
                 </div>
               </div>

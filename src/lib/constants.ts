@@ -1,10 +1,8 @@
 export const GENDER_LABELS: Record<string, string> = {
-  MALE: 'Masculino',
-  FEMALE: 'Feminino',
-  OTHER: 'Outro',
   MASCULINO: 'Masculino',
   FEMININO: 'Feminino',
   OUTRO: 'Outro',
+  NAO_INFORMADO: 'Não Informado',
 }
 
 export const BLOOD_TYPE_LABELS: Record<string, string> = {
@@ -63,6 +61,7 @@ export const GENDER_OPTIONS = [
   { value: 'MASCULINO', label: 'Masculino' },
   { value: 'FEMININO', label: 'Feminino' },
   { value: 'OUTRO', label: 'Outro' },
+  { value: 'NAO_INFORMADO', label: 'Não Informado' },
 ]
 
 export const BLOOD_TYPE_OPTIONS = Object.entries(BLOOD_TYPE_LABELS).map(([value, label]) => ({ value, label }))

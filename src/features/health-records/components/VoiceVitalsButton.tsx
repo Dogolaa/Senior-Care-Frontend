@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import RecordRTC from 'recordrtc'
 import { Mic, Loader2, CheckCircle, XCircle, Volume2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -30,11 +30,28 @@ export function VoiceVitalsButton({ onFill }: VoiceVitalsButtonProps) {
   const streamRef = useRef<MediaStream | null>(null)
   const startTimeRef = useRef<number>(0)
   const isRecordingRef = useRef(false)
+  const mountedRef = useRef(true)
 
   const stopAndCleanStream = () => {
     streamRef.current?.getTracks().forEach((t) => t.stop())
     streamRef.current = null
   }
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      if (isRecordingRef.current && recorderRef.current) {
+        recorderRef.current.stopRecording(() => {
+          stopAndCleanStream()
+          recorderRef.current = null
+        })
+        isRecordingRef.current = false
+      } else {
+        stopAndCleanStream()
+      }
+    }
+  }, [])
 
   const startRecording = useCallback(async (e: React.PointerEvent) => {
     e.preventDefault()
@@ -54,11 +71,13 @@ export function VoiceVitalsButton({ onFill }: VoiceVitalsButtonProps) {
       recorder.startRecording()
       recorderRef.current = recorder
       startTimeRef.current = Date.now()
-      setState('recording')
+      if (mountedRef.current) setState('recording')
     } catch {
       isRecordingRef.current = false
-      setErrorMsg('Permissão de microfone negada. Permita o acesso nas configurações do navegador.')
-      setState('error')
+      if (mountedRef.current) {
+        setErrorMsg('Permissão de microfone negada. Permita o acesso nas configurações do navegador.')
+        setState('error')
+      }
     }
   }, [])
 
@@ -72,12 +91,12 @@ export function VoiceVitalsButton({ onFill }: VoiceVitalsButtonProps) {
       recorderRef.current.stopRecording(() => {
         stopAndCleanStream()
         recorderRef.current = null
-        setState('idle')
+        if (mountedRef.current) setState('idle')
       })
       return
     }
 
-    setState('processing')
+    if (mountedRef.current) setState('processing')
 
     recorderRef.current.stopRecording(async () => {
       const blob = recorderRef.current!.getBlob()
@@ -86,11 +105,15 @@ export function VoiceVitalsButton({ onFill }: VoiceVitalsButtonProps) {
 
       try {
         const data = await transcribeVitals(blob)
-        setResult(data)
-        setState('result')
+        if (mountedRef.current) {
+          setResult(data)
+          setState('result')
+        }
       } catch {
-        setErrorMsg('Não foi possível processar o áudio. Tente novamente.')
-        setState('error')
+        if (mountedRef.current) {
+          setErrorMsg('Não foi possível processar o áudio. Tente novamente.')
+          setState('error')
+        }
       }
     })
   }, [])
@@ -114,7 +137,6 @@ export function VoiceVitalsButton({ onFill }: VoiceVitalsButtonProps) {
 
   return (
     <div className="space-y-3">
-      {/* Recording button */}
       <button
         type="button"
         onPointerDown={startRecording}
@@ -142,23 +164,19 @@ export function VoiceVitalsButton({ onFill }: VoiceVitalsButtonProps) {
         {state === 'error' && <><XCircle className="h-4 w-4 shrink-0" /> {errorMsg}</>}
       </button>
 
-      {/* Error retry */}
       {state === 'error' && (
         <Button type="button" variant="outline" size="sm" className="w-full" onClick={() => setState('idle')}>
           Tentar novamente
         </Button>
       )}
 
-      {/* Result confirmation */}
       {state === 'result' && result && (
         <div className="rounded-lg border border-green-200 bg-green-50 p-4 space-y-3">
-          {/* Raw transcription */}
           <div className="space-y-1">
             <p className="text-xs font-medium text-green-800 uppercase tracking-wide">O que foi entendido</p>
             <p className="text-sm text-green-900 italic">"{result.rawTranscription}"</p>
           </div>
 
-          {/* Filled fields preview */}
           {filledFields.length > 0 ? (
             <div className="space-y-1">
               <p className="text-xs font-medium text-green-800 uppercase tracking-wide">Campos a preencher</p>
@@ -178,7 +196,6 @@ export function VoiceVitalsButton({ onFill }: VoiceVitalsButtonProps) {
             <p className="text-sm text-amber-700">Nenhum campo reconhecido na fala. Verifique o que foi dito e tente novamente.</p>
           )}
 
-          {/* Action buttons */}
           <div className="flex gap-2 pt-1">
             {filledFields.length > 0 && (
               <Button type="button" size="sm" className="flex-1" onClick={applyResult}>

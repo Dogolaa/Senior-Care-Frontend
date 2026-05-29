@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { FileHeart, Search } from 'lucide-react'
+import { useLocation } from 'react-router-dom'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { Input } from '@/components/ui/input'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -14,6 +15,8 @@ export function HealthRecordsPage() {
   const [selectedResident, setSelectedResident] = useState<ResidentDTO | null>(null)
   const [search, setSearch] = useState('')
   const healthViewRef = useRef<HTMLDivElement>(null)
+  const location = useLocation()
+  const preselectId = (location.state as { residentId?: string } | null)?.residentId
   const { role, userId } = useAuthStore()
   const readOnly = !hasPermission(role, 'MANAGE_HEALTH_RECORDS')
   const isFamily = role === 'FAMILY_MEMBER'
@@ -42,6 +45,16 @@ export function HealthRecordsPage() {
       setSelectedResident(linkedResidents[0])
     }
   }, [isFamily, linkedResidents, selectedResident])
+
+  useEffect(() => {
+    if (!preselectId || !allResidents) return
+    const resident = allResidents.find((r) => r.id === preselectId)
+    if (resident) {
+      setSelectedResident(resident)
+      setTimeout(() => healthViewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80)
+      window.history.replaceState({}, '')
+    }
+  }, [preselectId, allResidents])
 
   const handleSelect = (resident: ResidentDTO) => {
     setSelectedResident(resident)

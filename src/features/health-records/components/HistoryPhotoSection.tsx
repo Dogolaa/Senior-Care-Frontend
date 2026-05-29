@@ -5,12 +5,14 @@ export function HistoryPhotoSection({
   historyId,
   photoUrls,
   readOnly,
+  residentId,
 }: {
   historyId: string
   photoUrls: string[]
   readOnly: boolean
+  residentId: string
 }) {
-  const { mutate: addPhoto } = useAddHistoryPhoto()
+  const { mutate: addPhoto } = useAddHistoryPhoto(residentId)
   if (photoUrls.length === 0 && readOnly) return null
   return (
     <div className="mt-3 space-y-2">

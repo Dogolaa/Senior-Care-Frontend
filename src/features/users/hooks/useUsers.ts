@@ -27,6 +27,16 @@ export function useUserList(page = 0, size = 12) {
   })
 }
 
+export function useUserSearch(enabled = true) {
+  return useQuery({
+    queryKey: ['users', 'search-all'],
+    queryFn: () => getUsers({ page: 0, size: 500, sort: 'name' }),
+    select: (data) => extractUsers(data),
+    staleTime: 1000 * 60 * 2,
+    enabled,
+  })
+}
+
 export function useUpdateUser(onSuccess?: () => void) {
   const qc = useQueryClient()
   return useMutation({

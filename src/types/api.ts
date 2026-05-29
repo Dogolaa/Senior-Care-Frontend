@@ -170,6 +170,7 @@ export interface HealthRecordDTO {
   saturation: number
   imc: number
   lastUpdated: string
+  conditions: string[]
   history: HealthRecordHistoryDTO[]
 }
 

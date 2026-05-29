@@ -4,8 +4,10 @@ import type { ActivityRecordDTO } from '@/types/api'
 export const getActivityRecord = (residentId: string): Promise<ActivityRecordDTO> =>
   api.get(`/activity-records/resident/${residentId}`).then((r) => r.data)
 
-export const createActivityRecord = (residentId: string, conductedById: string): Promise<void> =>
-  api.post('/activity-records', { residentId, conductedById })
+export const createActivityRecord = async (residentId: string, conductedById: string): Promise<ActivityRecordDTO> => {
+  await api.post('/activity-records', { residentId, conductedById })
+  return api.get(`/activity-records/resident/${residentId}`).then((r) => r.data)
+}
 
 export const addActivity = (
   id: string,

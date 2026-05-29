@@ -12,3 +12,9 @@ export const updateHealthRecord = (id: string, data: Partial<CreateHealthRecordR
 
 export const addHistoryPhoto = (historyId: string, photoUrl: string): Promise<void> =>
   api.post(`/health-records/histories/${historyId}/photos`, { photoUrl })
+
+export const addCondition = (residentId: string, conditionDescription: string): Promise<void> =>
+  api.post(`/health-records/resident/${residentId}/conditions`, { conditionDescription })
+
+export const removeCondition = (residentId: string, description: string): Promise<void> =>
+  api.delete(`/health-records/resident/${residentId}/conditions`, { params: { description } })

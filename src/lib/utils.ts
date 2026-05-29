@@ -78,7 +78,7 @@ export function bloodPressureStatus(bp: string | null | undefined): VitalStatus 
   if (!parsed) return 'normal'
   const { sys, dia } = parsed
   if (sys > 160 || sys < 80 || dia > 100) return 'danger'
-  if (sys > 140 || sys < 90 || dia > 90) return 'warning'
+  if (sys > 120 || dia > 80) return 'warning'
   return 'normal'
 }
 
@@ -111,6 +111,8 @@ export function checkVitalAnomalies(
       const reason = parsed.sys > 160 ? 'Hipertensão grave (sistólica > 160)' :
         parsed.sys < 80 ? 'Hipotensão (sistólica < 80)' :
         parsed.dia > 100 ? 'Hipertensão (diastólica > 100)' :
+        parsed.sys > 120 ? 'Pré-hipertensão (sistólica > 120)' :
+        parsed.dia > 80 ? 'Pré-hipertensão (diastólica > 80)' :
         'Pressão fora do padrão'
       anomalies.push({ name: 'Pressão Arterial', value: `${bloodPressure} mmHg`, reason })
     }

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { BedDouble, Search, FileHeart } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -22,8 +22,12 @@ function calcAge(dateOfBirth: string): number {
 }
 
 function RoomCard({ room, residents }: { room: string; residents: ResidentDTO[] }) {
+  const navigate = useNavigate()
   const isSingle = residents.length === 1
   const single = residents[0]
+
+  const goToRecord = (residentId: string) =>
+    navigate('/health-records', { state: { residentId } })
 
   const header = (
     <CardHeader className="pb-2">
@@ -38,22 +42,26 @@ function RoomCard({ room, residents }: { room: string; residents: ResidentDTO[] 
 
   if (isSingle) {
     return (
-      <Link to="/health-records">
-        <Card className="hover:shadow-md transition-shadow cursor-pointer h-full border-l-4 border-l-green-500">
-          {header}
-          <CardContent>
-            <p className="font-semibold">{single.name}</p>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              {calcAge(single.dateOfBirth)} anos
-              {single.admissionDate && ` · desde ${formatDate(single.admissionDate)}`}
-            </p>
-            <div className="mt-3 flex items-center gap-1 text-xs text-primary font-medium">
-              <FileHeart className="h-3.5 w-3.5" />
-              Ver Prontuário
-            </div>
-          </CardContent>
-        </Card>
-      </Link>
+      <Card
+        className="hover:shadow-md transition-shadow cursor-pointer h-full border-l-4 border-l-green-500"
+        onClick={() => goToRecord(single.id)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === 'Enter' && goToRecord(single.id)}
+      >
+        {header}
+        <CardContent>
+          <p className="font-semibold">{single.name}</p>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {calcAge(single.dateOfBirth)} anos
+            {single.admissionDate && ` · desde ${formatDate(single.admissionDate)}`}
+          </p>
+          <div className="mt-3 flex items-center gap-1 text-xs text-primary font-medium">
+            <FileHeart className="h-3.5 w-3.5" />
+            Ver Prontuário
+          </div>
+        </CardContent>
+      </Card>
     )
   }
 
@@ -62,7 +70,12 @@ function RoomCard({ room, residents }: { room: string; residents: ResidentDTO[] 
       {header}
       <CardContent className="space-y-1">
         {residents.map((r) => (
-          <Link key={r.id} to="/health-records" className="block group">
+          <button
+            key={r.id}
+            type="button"
+            onClick={() => goToRecord(r.id)}
+            className="w-full text-left group"
+          >
             <div className="flex items-center justify-between rounded-md px-2 py-1.5 -mx-2 hover:bg-muted transition-colors">
               <div>
                 <p className="font-medium text-sm group-hover:text-primary transition-colors">{r.name}</p>
@@ -70,7 +83,7 @@ function RoomCard({ room, residents }: { room: string; residents: ResidentDTO[] 
               </div>
               <FileHeart className="h-3.5 w-3.5 text-primary opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
             </div>
-          </Link>
+          </button>
         ))}
       </CardContent>
     </Card>

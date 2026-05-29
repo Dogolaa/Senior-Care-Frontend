@@ -18,7 +18,7 @@ import { useAuthStore } from '@/store/authStore'
 import { hasPermission } from '@/lib/permissions'
 import { formatDate, formatDateTime } from '@/lib/utils'
 import { PhotoUploader, PhotoGallery } from '@/components/shared/PhotoUploader'
-import type { ResidentDTO } from '@/types/api'
+import type { ActivityRecordDTO, ResidentDTO } from '@/types/api'
 
 const activitySchema = z.object({
   activityName: z.string().min(2, 'Nome da atividade obrigatório'),
@@ -30,8 +30,18 @@ const activitySchema = z.object({
 
 type ActivityFormData = z.infer<typeof activitySchema>
 
-function ActivityPhotoSection({ historyId, photoUrls, canAdd }: { historyId: string; photoUrls: string[]; canAdd: boolean }) {
-  const { mutate: addPhoto } = useAddActivityPhoto()
+function ActivityPhotoSection({
+  historyId,
+  photoUrls,
+  canAdd,
+  residentId,
+}: {
+  historyId: string
+  photoUrls: string[]
+  canAdd: boolean
+  residentId: string
+}) {
+  const { mutate: addPhoto } = useAddActivityPhoto(residentId)
   if (photoUrls.length === 0 && !canAdd) return null
   return (
     <div className="mt-3 space-y-2">
@@ -58,20 +68,25 @@ function ActivityView({ residentId, readOnly }: { residentId: string; readOnly: 
   })
 
   const onAddActivity = (data: ActivityFormData) => {
+    const activityData = { ...data, notes: data.notes ?? '', conductedById: userId }
+
     if (!record) {
       createRecord(
         { residentId, conductedById: userId },
         {
-          onSuccess: () => {
-            setShowForm(false)
-            reset()
+          onSuccess: (createdRecord: ActivityRecordDTO) => {
+            addAct(
+              { id: createdRecord.id, data: activityData },
+              { onSuccess: () => { setShowForm(false); reset() } }
+            )
           },
         }
       )
       return
     }
+
     addAct(
-      { id: record.id, data: { ...data, notes: data.notes ?? '', conductedById: userId } },
+      { id: record.id, data: activityData },
       { onSuccess: () => { setShowForm(false); reset() } }
     )
   }
@@ -171,6 +186,7 @@ function ActivityView({ residentId, readOnly }: { residentId: string; readOnly: 
                   historyId={h.id}
                   photoUrls={h.photoUrls ?? []}
                   canAdd={!readOnly}
+                  residentId={residentId}
                 />
               </CardContent>
             </Card>

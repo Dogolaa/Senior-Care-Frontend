@@ -10,6 +10,7 @@ import { VitalsDisplay } from './VitalsDisplay'
 import { VitalsCharts } from './VitalsCharts'
 import { HealthRecordForm } from './HealthRecordForm'
 import { HistoryPhotoSection } from './HistoryPhotoSection'
+import { ConditionsSection } from './ConditionsSection'
 import { useHealthRecord } from '@/features/health-records/hooks/useHealthRecord'
 import { formatDate, checkVitalAnomalies, heartRateStatus, saturationStatus, temperatureStatus, bloodPressureStatus } from '@/lib/utils'
 import { cn } from '@/lib/utils'
@@ -89,6 +90,12 @@ export function VitalsTab({ residentId, readOnly }: { residentId: string; readOn
         </div>
       </div>
 
+      <ConditionsSection
+        residentId={residentId}
+        conditions={record.conditions ?? []}
+        readOnly={readOnly}
+      />
+
       {!readOnly && showForm && (
         <Card>
           <CardHeader>
@@ -153,7 +160,7 @@ export function VitalsTab({ residentId, readOnly }: { residentId: string; readOn
                       <span>PA: <strong className={cn('text-foreground', bloodPressureStatus(h.bloodPressure) === 'danger' && 'text-red-600', bloodPressureStatus(h.bloodPressure) === 'warning' && 'text-amber-600')}>{h.bloodPressure}</strong></span>
                       <span>IMC: <strong className="text-foreground">{h.imc != null ? h.imc.toFixed(1) : '—'}</strong></span>
                     </div>
-                    <HistoryPhotoSection historyId={h.id} photoUrls={h.photoUrls} readOnly={readOnly} />
+                    <HistoryPhotoSection historyId={h.id} photoUrls={h.photoUrls} readOnly={readOnly} residentId={residentId} />
                   </CardContent>
                 </Card>
                 )

@@ -64,6 +64,9 @@ export function usePromoteEmployee() {
       qc.invalidateQueries({ queryKey: ['employees'] })
       toast.success('Funcionário promovido com sucesso!')
     },
+    onError: () => {
+      toast.error('Não foi possível promover o funcionário. Verifique os dados informados.')
+    },
   })
 }
 
@@ -74,6 +77,9 @@ export function useDemoteEmployee() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['employees'] })
       toast.success('Funcionário removido da equipe.')
+    },
+    onError: () => {
+      toast.error('Não foi possível remover o funcionário da equipe.')
     },
   })
 }
@@ -86,6 +92,9 @@ export function useUpdateEmployee() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['employees'] })
       toast.success('Dados atualizados com sucesso!')
+    },
+    onError: () => {
+      toast.error('Não foi possível atualizar os dados do funcionário.')
     },
   })
 }

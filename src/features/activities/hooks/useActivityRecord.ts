@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { getActivityRecord, createActivityRecord, addActivity, addActivityPhoto } from '@/api/activityRecords'
+import type { ActivityRecordDTO } from '@/types/api'
 
 export function useActivityRecord(residentId: string | undefined) {
   return useQuery({
@@ -15,15 +16,16 @@ export function useActivityRecord(residentId: string | undefined) {
   })
 }
 
-export function useCreateActivityRecord(onSuccess?: () => void) {
+export function useCreateActivityRecord() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ residentId, conductedById }: { residentId: string; conductedById: string }) =>
       createActivityRecord(residentId, conductedById),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ['activity-records', 'resident', vars.residentId] })
-      toast.success('Registro de atividades criado!')
-      onSuccess?.()
+    onSuccess: (record: ActivityRecordDTO, vars) => {
+      qc.setQueryData(['activity-records', 'resident', vars.residentId], record)
+    },
+    onError: () => {
+      toast.error('Não foi possível iniciar o registro de atividades.')
     },
   })
 }
@@ -47,16 +49,22 @@ export function useAddActivity(residentId: string, onSuccess?: () => void) {
       toast.success('Atividade registrada!')
       onSuccess?.()
     },
+    onError: () => {
+      toast.error('Não foi possível registrar a atividade.')
+    },
   })
 }
 
-export function useAddActivityPhoto(residentId?: string) {
+export function useAddActivityPhoto(residentId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ historyId, photoUrl }: { historyId: string; photoUrl: string }) =>
       addActivityPhoto(historyId, photoUrl),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['activity-records', 'resident', residentId] })
+    },
+    onError: () => {
+      toast.error('Não foi possível adicionar a foto.')
     },
   })
 }

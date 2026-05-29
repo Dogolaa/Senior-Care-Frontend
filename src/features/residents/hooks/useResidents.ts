@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import {
   getResidents, getResident, admitResident, updateResident, getResidentsByFamilyMember,
   createFamilyMemberUser, linkFamilyMember, removeFamilyLink, setPrimaryContact,
+  addAllergy, removeAllergy,
 } from '@/api/residents'
 import type { AdmitResidentRequest, FamilyLinkRequest, ResidentDTO, UpdateResidentRequest } from '@/types/api'
 
@@ -91,6 +92,9 @@ export function useAdmitResident(onSuccess?: () => void) {
       toast.success('Residente admitido com sucesso!')
       onSuccess?.()
     },
+    onError: () => {
+      toast.error('Não foi possível admitir o residente. Verifique os dados informados.')
+    },
   })
 }
 
@@ -102,6 +106,9 @@ export function useUpdateResident(onSuccess?: () => void) {
       qc.invalidateQueries({ queryKey: ['residents'] })
       toast.success('Dados do residente atualizados!')
       onSuccess?.()
+    },
+    onError: () => {
+      toast.error('Não foi possível atualizar os dados do residente.')
     },
   })
 }
@@ -124,6 +131,12 @@ export function useCreateAndLinkFamilyMember(residentId: string, onSuccess?: () 
       toast.success('Familiar cadastrado e vinculado com sucesso! Um e-mail com a senha temporária foi enviado.')
       onSuccess?.()
     },
+    onError: () => {
+      toast.error(
+        'Erro ao vincular o familiar. A conta pode ter sido criada mas o vínculo falhou — verifique e vincule manualmente se necessário.',
+        { duration: 8000 }
+      )
+    },
   })
 }
 
@@ -136,6 +149,9 @@ export function useLinkExistingFamilyMember(residentId: string, onSuccess?: () =
       toast.success('Familiar vinculado com sucesso!')
       onSuccess?.()
     },
+    onError: () => {
+      toast.error('Não foi possível vincular o familiar.')
+    },
   })
 }
 
@@ -147,6 +163,9 @@ export function useRemoveFamilyLink(residentId: string) {
       qc.invalidateQueries({ queryKey: ['residents'] })
       toast.success('Vínculo removido.')
     },
+    onError: () => {
+      toast.error('Não foi possível remover o vínculo.')
+    },
   })
 }
 
@@ -157,6 +176,37 @@ export function useSetPrimaryContact(residentId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['residents'] })
       toast.success('Contato principal atualizado.')
+    },
+    onError: () => {
+      toast.error('Não foi possível atualizar o contato principal.')
+    },
+  })
+}
+
+export function useAddAllergy(residentId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (allergyDescription: string) => addAllergy(residentId, allergyDescription),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['residents'] })
+      toast.success('Alergia registrada.')
+    },
+    onError: () => {
+      toast.error('Não foi possível registrar a alergia.')
+    },
+  })
+}
+
+export function useRemoveAllergy(residentId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (description: string) => removeAllergy(residentId, description),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['residents'] })
+      toast.success('Alergia removida.')
+    },
+    onError: () => {
+      toast.error('Não foi possível remover a alergia.')
     },
   })
 }

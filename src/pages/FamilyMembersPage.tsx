@@ -22,8 +22,6 @@ import {
 } from '@/features/residents/hooks/useResidents'
 import type { FamilyLinkDTO, ResidentDTO } from '@/types/api'
 
-// ─── Schema ────────────────────────────────────────────────────────────────────
-
 const schema = z.object({
   name: z.string().min(3, 'Nome deve ter ao menos 3 caracteres'),
   email: z.string().email('E-mail inválido'),
@@ -32,8 +30,6 @@ const schema = z.object({
   isPrimaryContact: z.boolean().default(false),
 })
 type FormData = z.infer<typeof schema>
-
-// ─── Linha de vínculo familiar ─────────────────────────────────────────────────
 
 function FamilyLinkRow({ link, residentId }: { link: FamilyLinkDTO; residentId: string }) {
   const [confirmRemove, setConfirmRemove] = useState(false)
@@ -54,7 +50,6 @@ function FamilyLinkRow({ link, residentId }: { link: FamilyLinkDTO; residentId: 
     <Card className="border-border">
       <CardContent className="p-4">
         <div className="flex items-start gap-4">
-          {/* Avatar */}
           <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
             {loadingUser ? (
               <div className="h-5 w-5 rounded-full bg-blue-200 animate-pulse" />
@@ -63,7 +58,6 @@ function FamilyLinkRow({ link, residentId }: { link: FamilyLinkDTO; residentId: 
             )}
           </div>
 
-          {/* Informações do familiar */}
           <div className="flex-1 min-w-0">
             {loadingUser ? (
               <div className="space-y-2">
@@ -103,7 +97,6 @@ function FamilyLinkRow({ link, residentId }: { link: FamilyLinkDTO; residentId: 
             )}
           </div>
 
-          {/* Ações */}
           <div className="flex flex-col gap-2 shrink-0">
             {!link.primaryContact && (
               <Button
@@ -143,8 +136,6 @@ function FamilyLinkRow({ link, residentId }: { link: FamilyLinkDTO; residentId: 
   )
 }
 
-// ─── Painel de gerenciamento do residente selecionado ─────────────────────────
-
 function ResidentFamilyPanel({ resident }: { resident: ResidentDTO }) {
   const [showForm, setShowForm] = useState(false)
   const { mutate: createAndLink, isPending } = useCreateAndLinkFamilyMember(resident.id, () => {
@@ -170,7 +161,6 @@ function ResidentFamilyPanel({ resident }: { resident: ResidentDTO }) {
 
   return (
     <div className="space-y-4">
-      {/* Familiares vinculados */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
@@ -196,7 +186,6 @@ function ResidentFamilyPanel({ resident }: { resident: ResidentDTO }) {
         </CardContent>
       </Card>
 
-      {/* Formulário de cadastro */}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
@@ -314,10 +303,8 @@ function ResidentFamilyPanel({ resident }: { resident: ResidentDTO }) {
   )
 }
 
-// ─── Página principal ──────────────────────────────────────────────────────────
-
 export function FamilyMembersPage() {
-  const [selectedResident, setSelectedResident] = useState<ResidentDTO | null>(null)
+  const [selectedResidentId, setSelectedResidentId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
 
   const { data: allResidents, isLoading } = useResidentSearch(true)
@@ -333,6 +320,12 @@ export function FamilyMembersPage() {
     )
   }, [allResidents, search])
 
+  // Always derive selectedResident from the freshest data so mutations reflect immediately
+  const selectedResident = useMemo(
+    () => (allResidents ?? []).find((r) => r.id === selectedResidentId) ?? null,
+    [allResidents, selectedResidentId]
+  )
+
   return (
     <div>
       <PageHeader
@@ -346,7 +339,7 @@ export function FamilyMembersPage() {
           className="pl-10"
           placeholder="Buscar residente por nome ou CPF..."
           value={search}
-          onChange={(e) => { setSearch(e.target.value); setSelectedResident(null) }}
+          onChange={(e) => { setSearch(e.target.value); setSelectedResidentId(null) }}
         />
       </div>
 
@@ -372,8 +365,8 @@ export function FamilyMembersPage() {
             <ResidentPickerCard
               key={r.id}
               resident={r}
-              selected={selectedResident?.id === r.id}
-              onClick={() => setSelectedResident((prev) => prev?.id === r.id ? null : r)}
+              selected={selectedResidentId === r.id}
+              onClick={() => setSelectedResidentId((prev) => prev === r.id ? null : r.id)}
             />
           ))}
         </div>

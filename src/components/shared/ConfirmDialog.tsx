@@ -35,10 +35,10 @@ export function ConfirmDialog({
           <DialogDescription className="text-base">{description}</DialogDescription>
         </DialogHeader>
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
             {cancelLabel}
           </Button>
-          <Button variant={variant} onClick={onConfirm} disabled={isLoading}>
+          <Button type="button" variant={variant} onClick={onConfirm} disabled={isLoading}>
             {isLoading ? 'Aguarde...' : confirmLabel}
           </Button>
         </DialogFooter>

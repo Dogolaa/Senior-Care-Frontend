@@ -7,33 +7,34 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { DatePicker } from '@/components/ui/date-picker'
 import { usePromoteEmployee } from '../hooks/useEmployees'
 
-const baseSchema = z.object({
+const formSchema = z.object({
+  type: z.enum(['nurse', 'doctor', 'manager']),
   userId: z.string().uuid('ID de usuário inválido'),
   admissionDate: z.string().min(1, 'Data de admissão obrigatória'),
   shift: z.string().min(1, 'Turno obrigatório'),
+  coren: z.string().optional(),
+  crm: z.string().optional(),
+  specialization: z.string().optional(),
+  department: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if (data.type === 'nurse') {
+    if (!data.coren?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['coren'], message: 'COREN obrigatório' })
+    if (!data.specialization?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['specialization'], message: 'Especialização obrigatória' })
+  }
+  if (data.type === 'doctor') {
+    if (!data.crm?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['crm'], message: 'CRM obrigatório' })
+    if (!data.specialization?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['specialization'], message: 'Especialização obrigatória' })
+  }
+  if (data.type === 'manager') {
+    if (!data.department?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['department'], message: 'Departamento obrigatório' })
+  }
 })
 
-const nurseSchema = baseSchema.extend({
-  type: z.literal('nurse'),
-  coren: z.string().min(1, 'COREN obrigatório'),
-  specialization: z.string().min(1, 'Especialização obrigatória'),
-})
-
-const doctorSchema = baseSchema.extend({
-  type: z.literal('doctor'),
-  crm: z.string().min(1, 'CRM obrigatório'),
-  specialization: z.string().min(1, 'Especialização obrigatória'),
-})
-
-const managerSchema = baseSchema.extend({
-  type: z.literal('manager'),
-  department: z.string().min(1, 'Departamento obrigatório'),
-})
-
+type FormData = z.infer<typeof formSchema>
 type EmployeeType = 'nurse' | 'doctor' | 'manager'
-type FormData = z.infer<typeof nurseSchema> | z.infer<typeof doctorSchema> | z.infer<typeof managerSchema>
 
 interface PromoteEmployeeDialogProps {
   open: boolean
@@ -46,23 +47,30 @@ export function PromoteEmployeeDialog({ open, onOpenChange }: PromoteEmployeeDia
   const [employeeType, setEmployeeType] = useState<EmployeeType>('nurse')
   const { mutate: promote, isPending } = usePromoteEmployee()
 
-  const schema = employeeType === 'nurse' ? nurseSchema : employeeType === 'doctor' ? doctorSchema : managerSchema
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(schema as z.ZodType<FormData>),
-    defaultValues: { type: 'nurse' } as FormData,
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: { type: 'nurse' },
   })
 
+  const admissionDate = watch('admissionDate')
+
   const onSubmit = (data: FormData) => {
-    const { type, ...rest } = data
+    const { type, coren, crm, specialization, department, ...base } = data
+    const roleData = type === 'nurse'
+      ? { ...base, coren: coren!, specialization: specialization! }
+      : type === 'doctor'
+      ? { ...base, crm: crm!, specialization: specialization! }
+      : { ...base, department: department! }
+
     promote(
-      { type, data: rest as Parameters<typeof promote>[0]['data'] },
-      { onSuccess: () => { reset(); onOpenChange(false) } }
+      { type, data: roleData as Parameters<typeof promote>[0]['data'] },
+      { onSuccess: () => { reset({ type: 'nurse' }); setEmployeeType('nurse'); onOpenChange(false) } }
     )
   }
 
   const handleTypeChange = (val: EmployeeType) => {
     setEmployeeType(val)
-    reset({ type: val } as FormData)
+    reset({ type: val })
   }
 
   return (
@@ -94,14 +102,20 @@ export function PromoteEmployeeDialog({ open, onOpenChange }: PromoteEmployeeDia
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="admissionDate">Data de Admissão</Label>
-            <Input id="admissionDate" type="date" {...register('admissionDate')} />
+            <Label>Data de Admissão</Label>
+            <DatePicker
+              value={admissionDate}
+              onChange={(v) => setValue('admissionDate', v, { shouldValidate: true })}
+              placeholder="Selecionar data de admissão"
+              fromYear={2000}
+              toYear={new Date().getFullYear() + 1}
+            />
             {errors.admissionDate && <p className="text-sm text-destructive">{errors.admissionDate.message}</p>}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="shift">Turno</Label>
-            <Select onValueChange={(v) => setValue('shift' as keyof FormData, v as never)}>
+            <Select onValueChange={(v) => setValue('shift', v, { shouldValidate: true })}>
               <SelectTrigger><SelectValue placeholder="Selecionar turno" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="MORNING">Manhã</SelectItem>
@@ -109,19 +123,20 @@ export function PromoteEmployeeDialog({ open, onOpenChange }: PromoteEmployeeDia
                 <SelectItem value="NIGHT">Noite</SelectItem>
               </SelectContent>
             </Select>
-            {errors.shift && <p className="text-sm text-destructive">{(errors.shift as { message?: string }).message}</p>}
+            {errors.shift && <p className="text-sm text-destructive">{errors.shift.message}</p>}
           </div>
 
           {employeeType === 'nurse' && (
             <>
               <div className="space-y-2">
                 <Label htmlFor="coren">COREN</Label>
-                <Input id="coren" placeholder="Ex: MG-123456" {...register('coren' as keyof FormData)} />
-                {'coren' in errors && <p className="text-sm text-destructive">{(errors as { coren?: { message?: string } }).coren?.message}</p>}
+                <Input id="coren" placeholder="Ex: MG-123456" {...register('coren')} />
+                {errors.coren && <p className="text-sm text-destructive">{errors.coren.message}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="specialization">Especialização</Label>
-                <Input id="specialization" placeholder="Ex: Geriatria" {...register('specialization' as keyof FormData)} />
+                <Input id="specialization" placeholder="Ex: Geriatria" {...register('specialization')} />
+                {errors.specialization && <p className="text-sm text-destructive">{errors.specialization.message}</p>}
               </div>
             </>
           )}
@@ -130,12 +145,13 @@ export function PromoteEmployeeDialog({ open, onOpenChange }: PromoteEmployeeDia
             <>
               <div className="space-y-2">
                 <Label htmlFor="crm">CRM</Label>
-                <Input id="crm" placeholder="Ex: MG-123456" {...register('crm' as keyof FormData)} />
-                {'crm' in errors && <p className="text-sm text-destructive">{(errors as { crm?: { message?: string } }).crm?.message}</p>}
+                <Input id="crm" placeholder="Ex: MG-123456" {...register('crm')} />
+                {errors.crm && <p className="text-sm text-destructive">{errors.crm.message}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="specialization">Especialização</Label>
-                <Input id="specialization" placeholder="Ex: Cardiologia" {...register('specialization' as keyof FormData)} />
+                <Input id="specialization" placeholder="Ex: Cardiologia" {...register('specialization')} />
+                {errors.specialization && <p className="text-sm text-destructive">{errors.specialization.message}</p>}
               </div>
             </>
           )}
@@ -143,8 +159,8 @@ export function PromoteEmployeeDialog({ open, onOpenChange }: PromoteEmployeeDia
           {employeeType === 'manager' && (
             <div className="space-y-2">
               <Label htmlFor="department">Departamento</Label>
-              <Input id="department" placeholder="Ex: Enfermagem" {...register('department' as keyof FormData)} />
-              {'department' in errors && <p className="text-sm text-destructive">{(errors as { department?: { message?: string } }).department?.message}</p>}
+              <Input id="department" placeholder="Ex: Enfermagem" {...register('department')} />
+              {errors.department && <p className="text-sm text-destructive">{errors.department.message}</p>}
             </div>
           )}
 

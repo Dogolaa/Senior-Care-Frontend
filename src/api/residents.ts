@@ -30,3 +30,9 @@ export const removeFamilyLink = (residentId: string, familyLinkId: string): Prom
 
 export const setPrimaryContact = (residentId: string, familyLinkId: string): Promise<void> =>
   api.patch(`/residents/${residentId}/family-links/${familyLinkId}/primary-contact`)
+
+export const addAllergy = (residentId: string, allergyDescription: string): Promise<void> =>
+  api.post(`/residents/${residentId}/allergies`, { allergyDescription })
+
+export const removeAllergy = (residentId: string, description: string): Promise<void> =>
+  api.delete(`/residents/${residentId}/allergies`, { params: { description } })

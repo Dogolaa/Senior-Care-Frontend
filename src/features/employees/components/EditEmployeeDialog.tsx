@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { DatePicker } from '@/components/ui/date-picker'
 import { SHIFT_OPTIONS } from '@/lib/constants'
 import { useUpdateEmployee } from '../hooks/useEmployees'
 import { RoleBadge } from './RoleBadge'
@@ -32,9 +33,11 @@ interface EditEmployeeDialogProps {
 export function EditEmployeeDialog({ employee, open, onOpenChange }: EditEmployeeDialogProps) {
   const { mutate: update, isPending } = useUpdateEmployee()
 
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
   })
+
+  const admissionDate = watch('admissionDate')
 
   useEffect(() => {
     if (employee) {
@@ -69,8 +72,14 @@ export function EditEmployeeDialog({ employee, open, onOpenChange }: EditEmploye
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <div className="space-y-2">
-            <Label htmlFor="emp-admission">Data de Admissão</Label>
-            <Input id="emp-admission" type="date" {...register('admissionDate')} />
+            <Label>Data de Admissão</Label>
+            <DatePicker
+              value={admissionDate}
+              onChange={(v) => setValue('admissionDate', v, { shouldValidate: true })}
+              placeholder="Selecionar data de admissão"
+              fromYear={2000}
+              toYear={new Date().getFullYear() + 1}
+            />
             {errors.admissionDate && <p className="text-sm text-destructive">{errors.admissionDate.message}</p>}
           </div>
 

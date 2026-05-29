@@ -7,8 +7,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { DatePicker } from '@/components/ui/date-picker'
 import { GENDER_OPTIONS, BLOOD_TYPE_OPTIONS } from '@/lib/constants'
 import { useUpdateResident } from '../hooks/useResidents'
+import { AllergiesSection } from './AllergiesSection'
 import type { ResidentDTO } from '@/types/api'
 
 const schema = z.object({
@@ -31,9 +33,13 @@ interface EditResidentDialogProps {
 export function EditResidentDialog({ resident, open, onOpenChange }: EditResidentDialogProps) {
   const { mutate: update, isPending } = useUpdateResident(() => onOpenChange(false))
 
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
   })
+
+  const dateOfBirth = watch('dateOfBirth')
+  const gender = watch('gender')
+  const bloodType = watch('bloodType')
 
   useEffect(() => {
     if (resident) {
@@ -84,8 +90,13 @@ export function EditResidentDialog({ resident, open, onOpenChange }: EditResiden
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="edit-dob">Data de Nascimento</Label>
-            <Input id="edit-dob" type="date" {...register('dateOfBirth')} />
+            <Label>Data de Nascimento</Label>
+            <DatePicker
+              value={dateOfBirth}
+              onChange={(v) => setValue('dateOfBirth', v, { shouldValidate: true })}
+              placeholder="Selecionar data de nascimento"
+              toYear={new Date().getFullYear() - 40}
+            />
             {errors.dateOfBirth && <p className="text-sm text-destructive">{errors.dateOfBirth.message}</p>}
           </div>
 
@@ -93,8 +104,8 @@ export function EditResidentDialog({ resident, open, onOpenChange }: EditResiden
             <div className="space-y-2">
               <Label>Gênero</Label>
               <Select
-                defaultValue={resident?.gender}
-                onValueChange={(v) => setValue('gender', v)}
+                value={gender}
+                onValueChange={(v) => setValue('gender', v, { shouldValidate: true })}
               >
                 <SelectTrigger><SelectValue placeholder="Selecionar" /></SelectTrigger>
                 <SelectContent>
@@ -108,8 +119,8 @@ export function EditResidentDialog({ resident, open, onOpenChange }: EditResiden
             <div className="space-y-2">
               <Label>Tipo Sanguíneo</Label>
               <Select
-                defaultValue={resident?.bloodType}
-                onValueChange={(v) => setValue('bloodType', v)}
+                value={bloodType}
+                onValueChange={(v) => setValue('bloodType', v, { shouldValidate: true })}
               >
                 <SelectTrigger><SelectValue placeholder="Selecionar" /></SelectTrigger>
                 <SelectContent>
@@ -121,6 +132,13 @@ export function EditResidentDialog({ resident, open, onOpenChange }: EditResiden
               {errors.bloodType && <p className="text-sm text-destructive">{errors.bloodType.message}</p>}
             </div>
           </div>
+
+          {resident && (
+            <AllergiesSection
+              residentId={resident.id}
+              allergies={resident.allergies ?? []}
+            />
+          )}
 
           <div className="flex gap-2 justify-end pt-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

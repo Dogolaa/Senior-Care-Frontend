@@ -3,6 +3,12 @@ import { toast } from 'sonner'
 import { API_BASE_URL } from '@/lib/constants'
 import { useAuthStore } from '@/store/authStore'
 
+// Endpoints where 404 is a valid "not created yet" state — suppress the toast
+const SILENT_404_PATTERNS = [
+  '/health-records/resident/',
+  '/activity-records/resident/',
+]
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: { 'Content-Type': 'application/json' },
@@ -35,7 +41,9 @@ api.interceptors.response.use(
     }
 
     if (status === 404) {
-      toast.error(backendMsg ?? 'Recurso não encontrado.')
+      const url = error.config?.url ?? ''
+      const isSilent = SILENT_404_PATTERNS.some((p) => url.includes(p))
+      if (!isSilent) toast.error(backendMsg ?? 'Recurso não encontrado.')
       return Promise.reject(error)
     }
 

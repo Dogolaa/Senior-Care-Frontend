@@ -18,7 +18,7 @@ import { Avatar } from '@/components/ui/avatar'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
-import { useUserList, useUpdateUser, useDeleteUser } from '@/features/users/hooks/useUsers'
+import { useUserList, useUserSearch, useUpdateUser, useDeleteUser } from '@/features/users/hooks/useUsers'
 import { useAuthStore } from '@/store/authStore'
 import { hasPermission } from '@/lib/permissions'
 import { ROLE_LABELS, ROLE_COLORS, ROLE_AVATAR_COLORS } from '@/lib/constants'
@@ -178,21 +178,27 @@ export function UsersPage() {
   const canEdit = hasPermission(role, 'UPDATE_USER')
   const canDelete = hasPermission(role, 'DELETE_USER')
 
-  const { data, isLoading, isError, error } = useUserList(page, PAGE_SIZE)
+  const isSearching = search.trim().length > 0
+
+  const { data, isLoading: isPageLoading, isError, error } = useUserList(isSearching ? 0 : page, PAGE_SIZE)
+  const { data: searchResults, isLoading: isSearchLoading } = useUserSearch(isSearching)
   const { mutate: remove, isPending: isDeleting } = useDeleteUser()
 
-  const users = data?.users ?? []
-  const pageInfo = data?.pageInfo
-  const totalPages = pageInfo?.totalPages ?? 0
-  const totalElements = pageInfo?.totalElements ?? 0
+  const isLoading = isSearching ? isSearchLoading : isPageLoading
 
-  const filtered = search.trim()
-    ? users.filter(
+  const users = isSearching
+    ? (searchResults ?? []).filter(
         (u) =>
           u.name.toLowerCase().includes(search.toLowerCase()) ||
           u.email.toLowerCase().includes(search.toLowerCase()),
       )
-    : users
+    : (data?.users ?? [])
+
+  const pageInfo = isSearching ? undefined : data?.pageInfo
+  const totalPages = pageInfo?.totalPages ?? 0
+  const totalElements = isSearching ? users.length : (pageInfo?.totalElements ?? 0)
+
+  const filtered = users
 
   return (
     <div>

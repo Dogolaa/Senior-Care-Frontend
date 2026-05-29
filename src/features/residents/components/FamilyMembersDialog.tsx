@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useQuery } from '@tanstack/react-query'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Users, UserPlus, Star, Trash2, Crown, ChevronDown, ChevronUp } from 'lucide-react'
+import { Users, UserPlus, Star, Trash2, Crown, ChevronDown, ChevronUp, Mail, Phone } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,6 +11,8 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { getUser } from '@/api/users'
+import { formatPhone } from '@/lib/utils'
 import {
   useCreateAndLinkFamilyMember,
   useRemoveFamilyLink,
@@ -39,51 +42,99 @@ function FamilyLinkRow({
   const { mutate: remove, isPending: removing } = useRemoveFamilyLink(residentId)
   const { mutate: setPrimary, isPending: settingPrimary } = useSetPrimaryContact(residentId)
 
+  const { data: user, isLoading: loadingUser } = useQuery({
+    queryKey: ['users', link.familyMemberId],
+    queryFn: () => getUser(link.familyMemberId),
+    staleTime: 1000 * 60 * 10,
+  })
+
+  const initials = user
+    ? user.name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('')
+    : '?'
+
   return (
-    <div className="flex items-center justify-between gap-3 p-3 rounded-lg border border-border bg-muted/30">
-      <div className="flex items-center gap-2 min-w-0">
-        <Users className="h-4 w-4 text-muted-foreground shrink-0" />
-        <div className="min-w-0">
-          <p className="text-sm font-medium truncate">{link.relationship}</p>
-          {link.primaryContact && (
-            <Badge className="text-xs mt-0.5 bg-amber-100 text-amber-800 border-amber-200">
-              <Crown className="h-3 w-3 mr-1" />
-              Contato principal
-            </Badge>
+    <div className="rounded-lg border border-border bg-muted/20 p-3">
+      <div className="flex items-start gap-3">
+        {/* Avatar */}
+        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0 mt-0.5">
+          {loadingUser ? (
+            <div className="h-5 w-5 rounded-full bg-blue-200 animate-pulse" />
+          ) : (
+            <span className="text-blue-700 font-bold text-sm">{initials}</span>
           )}
         </div>
-      </div>
 
-      {canManage && (
-        <div className="flex items-center gap-1 shrink-0">
-          {!link.primaryContact && (
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          {loadingUser ? (
+            <div className="space-y-1.5">
+              <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+              <div className="h-3 w-44 bg-muted rounded animate-pulse" />
+            </div>
+          ) : (
+            <>
+              <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
+                <p className="font-semibold text-sm text-foreground">{user?.name ?? '—'}</p>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-medium">
+                  {link.relationship}
+                </span>
+                {link.primaryContact && (
+                  <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-medium">
+                    <Crown className="h-3 w-3" />
+                    Contato principal
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                {user?.email && (
+                  <span className="flex items-center gap-1">
+                    <Mail className="h-3 w-3" />
+                    {user.email}
+                  </span>
+                )}
+                {user?.phone && (
+                  <span className="flex items-center gap-1">
+                    <Phone className="h-3 w-3" />
+                    {formatPhone(user.phone)}
+                  </span>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Ações */}
+        {canManage && (
+          <div className="flex items-center gap-1 shrink-0">
+            {!link.primaryContact && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs text-amber-700 hover:bg-amber-50"
+                disabled={settingPrimary}
+                onClick={() => setPrimary(link.id)}
+              >
+                <Star className="h-3 w-3 mr-1" />
+                Principal
+              </Button>
+            )}
             <Button
               variant="ghost"
-              size="sm"
-              className="h-8 text-xs text-amber-700 hover:bg-amber-50"
-              disabled={settingPrimary}
-              onClick={() => setPrimary(link.id)}
+              size="icon"
+              className="h-8 w-8 text-destructive hover:bg-destructive/10"
+              onClick={() => setConfirmRemove(true)}
             >
-              <Star className="h-3 w-3 mr-1" />
-              Principal
+              <Trash2 className="h-3.5 w-3.5" />
             </Button>
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-destructive hover:bg-destructive/10"
-            onClick={() => setConfirmRemove(true)}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      )}
+          </div>
+        )}
+      </div>
 
       <ConfirmDialog
         open={confirmRemove}
         onOpenChange={setConfirmRemove}
         title="Remover vínculo familiar?"
-        description={`Tem certeza que deseja remover o vínculo "${link.relationship}" deste residente? O usuário familiar ainda existirá no sistema.`}
+        description={`Tem certeza que deseja remover ${user?.name ?? 'este familiar'} como ${link.relationship}? O usuário ainda existirá no sistema.`}
         confirmLabel="Sim, remover vínculo"
         isLoading={removing}
         onConfirm={() => remove(link.id, { onSuccess: () => setConfirmRemove(false) })}

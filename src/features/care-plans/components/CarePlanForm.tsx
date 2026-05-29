@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { DatePicker } from '@/components/ui/date-picker'
 import { CARE_PLAN_STATUS_OPTIONS } from '@/lib/constants'
 import type { CarePlanDTO } from '../../../types/api'
 
@@ -43,6 +44,7 @@ export function CarePlanForm({
     handleSubmit,
     reset,
     setValue,
+    watch,
     control,
     formState: { errors },
   } = useForm<CarePlanFormData>({
@@ -57,6 +59,9 @@ export function CarePlanForm({
       status: 'ACTIVE',
     },
   })
+
+  const startDate = watch('startDate')
+  const endDate = watch('endDate')
 
   const { fields: goalFields, append: addGoal, remove: removeGoal } = useFieldArray({ control, name: 'goals' })
   const { fields: interventionFields, append: addIntervention, remove: removeIntervention } = useFieldArray({ control, name: 'interventions' })
@@ -95,14 +100,26 @@ export function CarePlanForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="startDate">Data de Início</Label>
-          <Input id="startDate" type="date" {...register('startDate')} />
+          <Label>Data de Início</Label>
+          <DatePicker
+            value={startDate}
+            onChange={(v) => setValue('startDate', v, { shouldValidate: true })}
+            placeholder="Selecionar"
+            fromYear={new Date().getFullYear() - 1}
+            toYear={new Date().getFullYear() + 5}
+          />
           {errors.startDate && <p className="text-sm text-destructive">{errors.startDate.message}</p>}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="endDate">Data de Término</Label>
-          <Input id="endDate" type="date" {...register('endDate')} />
+          <Label>Data de Término <span className="text-muted-foreground text-xs font-normal">(opcional)</span></Label>
+          <DatePicker
+            value={endDate}
+            onChange={(v) => setValue('endDate', v)}
+            placeholder="Selecionar"
+            fromYear={new Date().getFullYear() - 1}
+            toYear={new Date().getFullYear() + 5}
+          />
         </div>
       </div>
 
