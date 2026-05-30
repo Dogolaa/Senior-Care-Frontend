@@ -10,13 +10,15 @@ import { VoiceVitalsButton } from './VoiceVitalsButton'
 import type { HealthRecordDTO } from '@/types/api'
 import type { VitalsTranscriptionResponse } from '@/api/speech'
 
+const toNum = (v: unknown) => (typeof v === 'string' ? v.replace(',', '.') : v)
+
 const schema = z.object({
-  height: z.coerce.number().min(0.5).max(2.5),
-  weight: z.coerce.number().min(10).max(300),
+  height: z.preprocess(toNum, z.coerce.number().min(0.5, 'Mínimo 0,5m').max(2.5, 'Máximo 2,5m')),
+  weight: z.preprocess(toNum, z.coerce.number().min(10, 'Mínimo 10kg').max(300, 'Máximo 300kg')),
   bloodPressure: z.string().regex(/^\d{2,3}\/\d{2,3}$/, 'Formato: 120/80'),
-  heartRate: z.coerce.number().min(20).max(250),
-  temperature: z.coerce.number().min(30).max(45),
-  saturation: z.coerce.number().min(50).max(100),
+  heartRate: z.coerce.number().min(20, 'Mínimo 20 bpm').max(250, 'Máximo 250 bpm'),
+  temperature: z.preprocess(toNum, z.coerce.number().min(30, 'Mínimo 30°C').max(45, 'Máximo 45°C')),
+  saturation: z.preprocess(toNum, z.coerce.number().min(50, 'Mínimo 50%').max(100, 'Máximo 100%')),
 })
 
 type FormData = z.infer<typeof schema>

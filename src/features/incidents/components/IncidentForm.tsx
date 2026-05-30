@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { DateTimePicker } from '@/components/ui/date-time-picker'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { INCIDENT_TYPE_OPTIONS, INCIDENT_SEVERITY_OPTIONS } from '@/lib/constants'
@@ -47,6 +48,7 @@ export function IncidentForm({
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<IncidentFormData>({
     resolver: zodResolver(schema),
@@ -104,8 +106,11 @@ export function IncidentForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="occurredAt">Data e Hora do Incidente</Label>
-          <Input id="occurredAt" type="datetime-local" {...register('occurredAt')} />
+          <Label>Data e Hora do Incidente</Label>
+          <DateTimePicker
+            value={watch('occurredAt')}
+            onChange={(v) => setValue('occurredAt', v, { shouldValidate: true })}
+          />
           {errors.occurredAt && <p className="text-sm text-destructive">{errors.occurredAt.message}</p>}
         </div>
 

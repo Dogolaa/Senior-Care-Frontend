@@ -68,6 +68,21 @@ export function DatePicker({
           defaultMonth={selected ?? new Date()}
           initialFocus
         />
+        <div className="border-t" />
+        <div className="p-2 flex justify-end">
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            className="h-8 text-xs font-medium"
+            onClick={() => {
+              onChange(format(new Date(), "yyyy-MM-dd"))
+              setOpen(false)
+            }}
+          >
+            Hoje
+          </Button>
+        </div>
       </PopoverContent>
     </Popover>
   )

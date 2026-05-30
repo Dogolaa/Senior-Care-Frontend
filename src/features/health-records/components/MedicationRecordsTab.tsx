@@ -2,10 +2,11 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Plus, ClipboardList, Eye, Clock, Calendar } from 'lucide-react'
+import { Plus, ClipboardList, Eye, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { DatePicker } from '@/components/ui/date-picker'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -54,6 +55,7 @@ export function MedicationRecordsTab({
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<MedicationRecordFormData>({
     resolver: zodResolver(medicationRecordSchema),
@@ -135,12 +137,12 @@ export function MedicationRecordsTab({
                   </button>
                 </div>
                 <div className="flex gap-2">
-                  <div className="relative flex-[3]">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
-                    <input
-                      type="date"
-                      {...register('administrationDate')}
-                      className="w-full h-11 pl-10 pr-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                  <div className="flex-[3]">
+                    <DatePicker
+                      value={watch('administrationDate')}
+                      onChange={(v) => setValue('administrationDate', v, { shouldValidate: true })}
+                      fromYear={new Date().getFullYear() - 1}
+                      toYear={new Date().getFullYear() + 1}
                     />
                   </div>
                   <div className="relative flex-[2]">

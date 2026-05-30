@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { PageHeader } from '@/components/shared/PageHeader'
+import { DateTimePicker } from '@/components/ui/date-time-picker'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -63,7 +64,7 @@ function ActivityView({ residentId, readOnly }: { residentId: string; readOnly: 
   const [showForm, setShowForm] = useState(false)
   const userId = useAuthStore((s) => s.userId)!
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<ActivityFormData>({
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<ActivityFormData>({
     resolver: zodResolver(activitySchema),
   })
 
@@ -132,12 +133,18 @@ function ActivityView({ residentId, readOnly }: { residentId: string; readOnly: 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Início</Label>
-                  <Input type="datetime-local" {...register('startDateTime')} />
+                  <DateTimePicker
+                    value={watch('startDateTime')}
+                    onChange={(v) => setValue('startDateTime', v, { shouldValidate: true })}
+                  />
                   {errors.startDateTime && <p className="text-sm text-destructive">{errors.startDateTime.message}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label>Fim</Label>
-                  <Input type="datetime-local" {...register('endDateTime')} />
+                  <DateTimePicker
+                    value={watch('endDateTime')}
+                    onChange={(v) => setValue('endDateTime', v, { shouldValidate: true })}
+                  />
                   {errors.endDateTime && <p className="text-sm text-destructive">{errors.endDateTime.message}</p>}
                 </div>
               </div>
